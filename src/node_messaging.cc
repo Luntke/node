@@ -700,7 +700,8 @@ MaybeLocal<Value> MessagePort::ReceiveMessage(Local<Context> context,
 void MessagePort::OnMessage() {
   Debug(this, "Running MessagePort::OnMessage()");
   HandleScope handle_scope(env()->isolate());
-  Local<Context> context = object(env()->isolate())->CreationContext();
+  Local<Context> context =
+      object(env()->isolate())->GetCreationContext().ToLocalChecked();
 
   size_t processing_limit;
   {
@@ -811,7 +812,7 @@ Maybe<bool> MessagePort::PostMessage(Environment* env,
                                      const TransferList& transfer_v) {
   Isolate* isolate = env->isolate();
   Local<Object> obj = object(isolate);
-  Local<Context> context = obj->CreationContext();
+  Local<Context> context = obj->GetCreationContext().ToLocalChecked();
 
   std::shared_ptr<Message> msg = std::make_shared<Message>();
 
@@ -909,7 +910,7 @@ static Maybe<bool> ReadIterable(Environment* env,
 void MessagePort::PostMessage(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   Local<Object> obj = args.This();
-  Local<Context> context = obj->CreationContext();
+  Local<Context> context = obj->GetCreationContext().ToLocalChecked();
 
   if (args.Length() == 0) {
     return THROW_ERR_MISSING_ARGS(env, "Not enough arguments to "
@@ -1017,8 +1018,8 @@ void MessagePort::ReceiveMessage(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  MaybeLocal<Value> payload =
-      port->ReceiveMessage(port->object()->CreationContext(), false);
+  MaybeLocal<Value> payload = port->ReceiveMessage(
+      port->object()->GetCreationContext().ToLocalChecked(), false);
   if (!payload.IsEmpty())
     args.GetReturnValue().Set(payload.ToLocalChecked());
 }
@@ -1377,7 +1378,7 @@ static void MessageChannel(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  Local<Context> context = args.This()->CreationContext();
+  Local<Context> context = args.This()->GetCreationContext().ToLocalChecked();
   Context::Scope context_scope(context);
 
   MessagePort* port1 = MessagePort::New(env, context);
